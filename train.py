@@ -27,8 +27,8 @@ GEN_SAMPLES_PATH = os.path.join(GEN_FOLDER, SAMPLES_FOLDER)
 
 CREATE_SAMPLES_COMMAND_EX = "opencv_createsamples -img POS_IMG -bg " + GEN_NEG_FILE + " -info " + GEN_INFO_FILE + " -pngoutput " + GEN_SAMPLES_PATH + " -maxxangle 0.5 -maxyangle 0.5 -maxzangle 0.5 -num 1950"
 CREATE_NEG_FILE_EX = 'find ' + GEN_NORMALIZED_NEGATIVES_FOLDER + ' -iname "*.jpg" > ' + NEG_FILE
-CREATE_VEC_COMMAND_EX = "opencv_createsamples -info " + GEN_INFO_FILE + " -num 1950 -w 20 -h 20 -vec " + GEN_VEC_FILE
-TRAIN_CASCADE_COMMAND = "opencv_traincascade -data ../" + DATA_FOLDER + " -vec " + VEC_FILE + " -bg " + NEG_FILE + " -numPos 1800 -numNeg 900 -numStages 1 -w 20 -h 20"
+CREATE_VEC_COMMAND_EX = "opencv_createsamples -info " + GEN_INFO_FILE + " -num 1950 -w 30 -h 30 -vec " + GEN_VEC_FILE
+TRAIN_CASCADE_COMMAND = "opencv_traincascade -data ../" + DATA_FOLDER + " -vec " + VEC_FILE + " -bg " + NEG_FILE + " -numPos 1800 -numNeg 900 -numStages 1 -w 30 -h 30"
 
 if __name__ == '__main__':
     # Making required folders

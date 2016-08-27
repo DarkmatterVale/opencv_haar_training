@@ -91,3 +91,4 @@ ENV/
 negatives/*.jpg
 positives/*.jpg
 generated
+haarcascade/*.xml

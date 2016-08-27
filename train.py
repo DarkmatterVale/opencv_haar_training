@@ -4,26 +4,31 @@ import shutil
 from time import sleep
 import sys
 
-NEGATIVES_PATH = "negatives/"
-POSITIVES_PATH = "positives/"
-GEN_FOLDER = "generated"
-DATA_FOLDER = "../haarcascade"
-GEN_NORMALIZED_NEGATIVES_FOLDER = "normalized_neg"
-GEN_NORMALIZED_NEGATIVES_PATH = "generated/normalized_neg/"
-GEN_SAMPLES_PATH = "generated/samples/"
-NEG_FILE = "negatives.txt"
-INFO_FILE = "samples/info.lst"
-GEN_NEG_FILE = os.path.join(GEN_FOLDER, NEG_FILE)
-GEN_INFO_FILE = os.path.join(GEN_FOLDER, INFO_FILE)
-VEC_FILE = "positives.vec"
-GEN_VEC_FILE = os.path.join(GEN_FOLDER, VEC_FILE)
-
 DEBUG = True
 
-CREATE_SAMPLES_COMMAND_EX = "opencv_createsamples -img POS_IMG -bg NEG_FILE -info INFO_LOC -pngoutput OUT_LOC -maxxangle 0.5 -maxyangle 0.5 -maxzangle 0.5 -num 1950"
-CREATE_NEG_FILE_EX = 'find DIR -iname "*.jpg" > NEG_FILE'
-CREATE_VEC_COMMAND_EX = "opencv_createsamples -info INFO_LOC -num 1950 -w 20 -h 20 -vec VEC_FILE"
-TRAIN_CASCADE_COMMAND = "opencv_traincascade -data " + DATA_FOLDER + " -vec " + VEC_FILE + " -bg " + NEG_FILE + " -numPos 1800 -numNeg 900 -numStages 5 -w 20 -h 20"
+GEN_FOLDER = "generated"
+NEGATIVES_FOLDER = "negatives/"
+POSITIVES_FOLDER = "positives/"
+DATA_FOLDER = "haarcascade"
+SAMPLES_FOLDER = "samples"
+
+NEG_FILE = "negatives.txt"
+INFO_FILE = "samples/info.lst"
+VEC_FILE = "positives.vec"
+
+GEN_NORMALIZED_NEGATIVES_FOLDER = "normalized_neg"
+
+GEN_NEG_FILE = os.path.join(GEN_FOLDER, NEG_FILE)
+GEN_INFO_FILE = os.path.join(GEN_FOLDER, INFO_FILE)
+GEN_VEC_FILE = os.path.join(GEN_FOLDER, VEC_FILE)
+
+GEN_NORMALIZED_NEGATIVES_PATH = "generated/normalized_neg/"
+GEN_SAMPLES_PATH = os.path.join(GEN_FOLDER, SAMPLES_FOLDER)
+
+CREATE_SAMPLES_COMMAND_EX = "opencv_createsamples -img POS_IMG -bg " + GEN_NEG_FILE + " -info " + GEN_INFO_FILE + " -pngoutput " + GEN_SAMPLES_PATH + " -maxxangle 0.5 -maxyangle 0.5 -maxzangle 0.5 -num 1950"
+CREATE_NEG_FILE_EX = 'find ' + GEN_NORMALIZED_NEGATIVES_FOLDER + ' -iname "*.jpg" > ' + NEG_FILE
+CREATE_VEC_COMMAND_EX = "opencv_createsamples -info " + GEN_INFO_FILE + " -num 1950 -w 20 -h 20 -vec " + GEN_VEC_FILE
+TRAIN_CASCADE_COMMAND = "opencv_traincascade -data ../" + DATA_FOLDER + " -vec " + VEC_FILE + " -bg " + NEG_FILE + " -numPos 1800 -numNeg 900 -numStages 1 -w 20 -h 20"
 
 if __name__ == '__main__':
     # Making required folders
@@ -39,8 +44,8 @@ if __name__ == '__main__':
     # Copying all negative images into a new folder
     if DEBUG:
         print("[*] Copying all negative images to secondary location...")
-    for file_name in os.listdir(NEGATIVES_PATH):
-        full_file_name = os.path.join(NEGATIVES_PATH, file_name)
+    for file_name in os.listdir(NEGATIVES_FOLDER):
+        full_file_name = os.path.join(NEGATIVES_FOLDER, file_name)
 
         if (os.path.isfile(full_file_name)):
             if ".jpg" in full_file_name:
@@ -53,7 +58,7 @@ if __name__ == '__main__':
     if DEBUG:
         print("[*] Generating negative images information file...")
     os.chdir(GEN_FOLDER)
-    create_neg_file = CREATE_NEG_FILE_EX.replace("DIR", GEN_NORMALIZED_NEGATIVES_FOLDER).replace("NEG_FILE", NEG_FILE)
+    create_neg_file = CREATE_NEG_FILE_EX
     os.system(create_neg_file)
     os.chdir("../")
     if DEBUG:
@@ -64,13 +69,13 @@ if __name__ == '__main__':
     if DEBUG:
         print("[*] Creating samples...")
     made_samples = False
-    for file_name in os.listdir(POSITIVES_PATH):
+    for file_name in os.listdir(POSITIVES_FOLDER):
         if made_samples == False:
-            full_file_name = os.path.join(POSITIVES_PATH, file_name)
+            full_file_name = os.path.join(POSITIVES_FOLDER, file_name)
 
             if (os.path.isfile(full_file_name)):
                 if ".jpg" in full_file_name:
-                    create_samples = CREATE_SAMPLES_COMMAND_EX.replace("POS_IMG", full_file_name).replace("NEG_FILE", GEN_NEG_FILE).replace("INFO_LOC", GEN_INFO_FILE).replace("OUT_LOC", GEN_SAMPLES_PATH)
+                    create_samples = CREATE_SAMPLES_COMMAND_EX.replace("POS_IMG", full_file_name)
                     process = subprocess.Popen(create_samples.split(" "), stdout=sys.stdout)
                     process.wait()
 
@@ -84,7 +89,7 @@ if __name__ == '__main__':
     # Creating vector file
     if DEBUG:
         print("[*] Creating vector file...")
-    create_vec_file = CREATE_VEC_COMMAND_EX.replace("INFO_LOC", GEN_INFO_FILE).replace("VEC_FILE", GEN_VEC_FILE)
+    create_vec_file = CREATE_VEC_COMMAND_EX
     os.system(create_vec_file)
     if DEBUG:
         print("[*] Finished writing vector file")

@@ -9,8 +9,8 @@ from utils import getOption
 parseOptions()
 
 DEBUG = getOption("debug")
-WIDTH = 30
-HEIGHT = 30
+WIDTH = str(30)
+HEIGHT = str(30)
 
 if getOption("width") != None:
     WIDTH = int(getOption("width"))
@@ -42,6 +42,15 @@ CREATE_VEC_COMMAND_EX = "opencv_createsamples -info " + GEN_INFO_FILE + " -num 1
 TRAIN_CASCADE_COMMAND = "opencv_traincascade -data ../" + DATA_FOLDER + " -vec " + VEC_FILE + " -bg " + NEG_FILE + " -numPos 1800 -numNeg 900 -numStages 1 -w " + WIDTH + " -h " + HEIGHT
 
 if __name__ == '__main__':
+    # Ensuring the previous build has been removed
+    if os.path.exists(GEN_FOLDER):
+        if DEBUG:
+            print("[*] Removing previous build...")
+        shutil.rmtree(GEN_FOLDER)
+        if DEBUG:
+            print("[*] Previous build has been removed")
+        sleep(0.1)
+
     # Making required folders
     if DEBUG:
         print("[*] Beginning folder creation...")

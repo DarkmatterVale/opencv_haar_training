@@ -13,9 +13,9 @@ WIDTH = str(30)
 HEIGHT = str(30)
 
 if getOption("width") != None:
-    WIDTH = int(getOption("width"))
+    WIDTH = getOption("width")
 if getOption("height") != None:
-    HEIGHT = int(getOption("height"))
+    HEIGHT = getOption("height")
 
 GEN_FOLDER = "generated"
 NEGATIVES_FOLDER = "negatives/"

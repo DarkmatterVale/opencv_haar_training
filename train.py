@@ -11,6 +11,9 @@ parseOptions()
 DEBUG = getOption("debug")
 WIDTH = str(30)
 HEIGHT = str(30)
+DEFAULT_NEG = 900
+DEFAULT_POS = 1800
+DEFAULT_SAMPLES = 1950
 
 if getOption("width") != None:
     WIDTH = getOption("width")
@@ -24,20 +27,24 @@ DATA_FOLDER = "haarcascade"
 SAMPLES_FOLDER = "samples"
 
 NEG_FILE = "negatives.txt"
+POS_FILE = "positives.txt"
 INFO_FILE = "samples/info.lst"
 VEC_FILE = "positives.vec"
 
 GEN_NORMALIZED_NEGATIVES_FOLDER = "normalized_neg"
+GEN_NORMALIZED_POSITIVES_FOLDER = "normalized_pos"
 
 GEN_NEG_FILE = os.path.join(GEN_FOLDER, NEG_FILE)
 GEN_INFO_FILE = os.path.join(GEN_FOLDER, INFO_FILE)
 GEN_VEC_FILE = os.path.join(GEN_FOLDER, VEC_FILE)
 
-GEN_NORMALIZED_NEGATIVES_PATH = "generated/normalized_neg/"
+GEN_NORMALIZED_NEGATIVES_PATH = os.path.join(GEN_FOLDER, GEN_NORMALIZED_NEGATIVES_FOLDER)
+GEN_NORMALIZED_POSITIVES_PATH = os.path.join(GEN_FOLDER, GEN_NORMALIZED_POSITIVES_FOLDER)
 GEN_SAMPLES_PATH = os.path.join(GEN_FOLDER, SAMPLES_FOLDER)
 
 CREATE_SAMPLES_COMMAND_EX = "opencv_createsamples -img POS_IMG -bg " + GEN_NEG_FILE + " -info " + GEN_INFO_FILE + " -pngoutput " + GEN_SAMPLES_PATH + " -maxxangle 0.5 -maxyangle 0.5 -maxzangle 0.5 -num 1950"
 CREATE_NEG_FILE_EX = 'find ' + GEN_NORMALIZED_NEGATIVES_FOLDER + ' -iname "*.jpg" > ' + NEG_FILE
+CREATE_POS_FILE_EX = 'find ' + GEN_NORMALIZED_POSITIVES_FOLDER + ' -iname "*.jpg" > ' + POS_FILE
 CREATE_VEC_COMMAND_EX = "opencv_createsamples -info " + GEN_INFO_FILE + " -num 1950 -w " + WIDTH + " -h " + HEIGHT + " -vec " + GEN_VEC_FILE
 TRAIN_CASCADE_COMMAND = "opencv_traincascade -data ../" + DATA_FOLDER + " -vec " + VEC_FILE + " -bg " + NEG_FILE + " -numPos 1800 -numNeg 900 -numStages 1 -w " + WIDTH + " -h " + HEIGHT
 
@@ -56,6 +63,7 @@ if __name__ == '__main__':
         print("[*] Beginning folder creation...")
     subprocess.Popen(["mkdir", GEN_FOLDER]).wait()
     subprocess.Popen(["mkdir", GEN_NORMALIZED_NEGATIVES_PATH]).wait()
+    subprocess.Popen(["mkdir", GEN_NORMALIZED_POSITIVES_PATH]).wait()
     subprocess.Popen(["mkdir", GEN_SAMPLES_PATH]).wait()
     if DEBUG:
         print("[*] Completed folder creation")
@@ -64,12 +72,15 @@ if __name__ == '__main__':
     # Copying all negative images into a new folder
     if DEBUG:
         print("[*] Copying all negative images to secondary location...")
+    NUM_NEGATIVES = 0
     for file_name in os.listdir(NEGATIVES_FOLDER):
         full_file_name = os.path.join(NEGATIVES_FOLDER, file_name)
 
-        if (os.path.isfile(full_file_name)):
+        if os.path.isfile(full_file_name):
             if ".jpg" in full_file_name:
                 shutil.copy(full_file_name, GEN_NORMALIZED_NEGATIVES_PATH)
+
+                NUM_NEGATIVES += 1
     if DEBUG:
         print("[*] Completed negative image copying")
     sleep(0.1)
@@ -78,11 +89,36 @@ if __name__ == '__main__':
     if DEBUG:
         print("[*] Generating negative images information file...")
     os.chdir(GEN_FOLDER)
-    create_neg_file = CREATE_NEG_FILE_EX
-    os.system(create_neg_file)
+    os.system(CREATE_NEG_FILE_EX)
     os.chdir("../")
     if DEBUG:
         print("[*] Completed negative images information generation")
+    sleep(0.1)
+
+    # Copying all positive images into a new folder
+    if DEBUG:
+        print("[*] Copying all positive images to secondary location...")
+    NUM_POSITIVES = 0
+    for file_name in os.listdir(POSITIVES_FOLDER):
+        full_file_name = os.path.join(POSITIVES_FOLDER, file_name)
+
+        if os.path.isfile(full_file_name):
+            if ".jpg" in full_file_name:
+                shutil.copy(full_file_name, GEN_NORMALIZED_POSITIVES_PATH)
+
+                NUM_POSITIVES += 1
+    if DEBUG:
+        print("[*] Completed positive image copying")
+    sleep(0.1)
+
+    # Generate positive images file (contains all of the positive images used)
+    if DEBUG:
+        print("[*] Generating positive images information file...")
+    os.chdir(GEN_FOLDER)
+    os.system(CREATE_POS_FILE_EX)
+    os.chdir("../")
+    if DEBUG:
+        print("[*] Completed positive images information generation")
     sleep(0.1)
 
     # Creating samples for the positive images
@@ -115,6 +151,7 @@ if __name__ == '__main__':
         print("[*] Finished writing vector file")
     sleep(0.1)
 
+    sys.exit(0)
     # Training cascade
     if DEBUG:
         print("[*] Training the cascade...")

@@ -36,7 +36,6 @@ GEN_NORMALIZED_POSITIVES_FOLDER = "normalized_pos"
 
 GEN_NEG_FILE = os.path.join(GEN_FOLDER, NEG_FILE)
 GEN_INFO_FILE = os.path.join(GEN_FOLDER, INFO_FILE)
-GEN_VEC_FILE = os.path.join(GEN_FOLDER, VEC_FILE)
 
 GEN_NORMALIZED_NEGATIVES_PATH = os.path.join(GEN_FOLDER, GEN_NORMALIZED_NEGATIVES_FOLDER)
 GEN_NORMALIZED_POSITIVES_PATH = os.path.join(GEN_FOLDER, GEN_NORMALIZED_POSITIVES_FOLDER)
@@ -65,6 +64,7 @@ if __name__ == '__main__':
     subprocess.Popen(["mkdir", GEN_FOLDER]).wait()
     subprocess.Popen(["mkdir", GEN_NORMALIZED_NEGATIVES_PATH]).wait()
     subprocess.Popen(["mkdir", GEN_NORMALIZED_POSITIVES_PATH]).wait()
+    subprocess.Popen(["mkdir", GEN_VEC_PATH]).wait()
     if DEBUG:
         print("[*] Completed folder creation")
     sleep(0.1)
@@ -130,6 +130,7 @@ if __name__ == '__main__':
                 # Creating vector file
                 if DEBUG:
                     print("[*] Creating vector file...")
+                GEN_VEC_FILE = os.path.join(GEN_VEC_PATH, VEC_FILE)
                 create_vec_file = CREATE_VEC_COMMAND_EX.replace("NUM_IMG", str(NUM_NEGATIVES)).replace("VEC_FILE", (GEN_VEC_FILE[:-4] + str(counter) + GEN_VEC_FILE[-4:])).replace("INFO_LOC", os.path.join((GEN_SAMPLES_PATH + str(counter)), INFO_FILE))
                 os.system(create_vec_file)
                 if DEBUG:

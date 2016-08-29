@@ -13,7 +13,6 @@ WIDTH = str(30)
 HEIGHT = str(30)
 DEFAULT_NEG = 900
 DEFAULT_POS = 1800
-DEFAULT_SAMPLES = 1950
 
 if getOption("width") != None:
     WIDTH = getOption("width")
@@ -25,10 +24,11 @@ NEGATIVES_FOLDER = "negatives/"
 POSITIVES_FOLDER = "positives/"
 DATA_FOLDER = "haarcascade"
 SAMPLES_FOLDER = "samples"
+VEC_FOLDER = "vectors"
 
 NEG_FILE = "negatives.txt"
 POS_FILE = "positives.txt"
-INFO_FILE = "samples/info.lst"
+INFO_FILE = "info.lst"
 VEC_FILE = "positives.vec"
 
 GEN_NORMALIZED_NEGATIVES_FOLDER = "normalized_neg"
@@ -41,11 +41,12 @@ GEN_VEC_FILE = os.path.join(GEN_FOLDER, VEC_FILE)
 GEN_NORMALIZED_NEGATIVES_PATH = os.path.join(GEN_FOLDER, GEN_NORMALIZED_NEGATIVES_FOLDER)
 GEN_NORMALIZED_POSITIVES_PATH = os.path.join(GEN_FOLDER, GEN_NORMALIZED_POSITIVES_FOLDER)
 GEN_SAMPLES_PATH = os.path.join(GEN_FOLDER, SAMPLES_FOLDER)
+GEN_VEC_PATH = os.path.join(GEN_FOLDER, VEC_FOLDER)
 
-CREATE_SAMPLES_COMMAND_EX = "opencv_createsamples -img POS_IMG -bg " + GEN_NEG_FILE + " -info " + GEN_INFO_FILE + " -pngoutput " + GEN_SAMPLES_PATH + " -maxxangle 0.5 -maxyangle 0.5 -maxzangle 0.5 -num 1950"
+CREATE_SAMPLES_COMMAND_EX = "opencv_createsamples -img POS_IMG -bg " + GEN_NEG_FILE + " -info INFO_LOC -pngoutput SAMPLES_PATH -maxxangle 0.5 -maxyangle 0.5 -maxzangle 0.5 -num NUM_IMG"
 CREATE_NEG_FILE_EX = 'find ' + GEN_NORMALIZED_NEGATIVES_FOLDER + ' -iname "*.jpg" > ' + NEG_FILE
-CREATE_POS_FILE_EX = 'find ' + GEN_NORMALIZED_POSITIVES_FOLDER + ' -iname "*.jpg" > ' + POS_FILE
-CREATE_VEC_COMMAND_EX = "opencv_createsamples -info " + GEN_INFO_FILE + " -num 1950 -w " + WIDTH + " -h " + HEIGHT + " -vec " + GEN_VEC_FILE
+CREATE_POS_FILE_EX = 'find ' + GEN_NORMALIZED_POSITIVES_FOLDER + ' -iname "*.jpg" > POS_FILE'
+CREATE_VEC_COMMAND_EX = "opencv_createsamples -info INFO_LOC -num NUM_IMG -w " + WIDTH + " -h " + HEIGHT + " -vec VEC_FILE"
 TRAIN_CASCADE_COMMAND = "opencv_traincascade -data ../" + DATA_FOLDER + " -vec " + VEC_FILE + " -bg " + NEG_FILE + " -numPos 1800 -numNeg 900 -numStages 1 -w " + WIDTH + " -h " + HEIGHT
 
 if __name__ == '__main__':
@@ -64,7 +65,6 @@ if __name__ == '__main__':
     subprocess.Popen(["mkdir", GEN_FOLDER]).wait()
     subprocess.Popen(["mkdir", GEN_NORMALIZED_NEGATIVES_PATH]).wait()
     subprocess.Popen(["mkdir", GEN_NORMALIZED_POSITIVES_PATH]).wait()
-    subprocess.Popen(["mkdir", GEN_SAMPLES_PATH]).wait()
     if DEBUG:
         print("[*] Completed folder creation")
     sleep(0.1)
@@ -111,47 +111,34 @@ if __name__ == '__main__':
         print("[*] Completed positive image copying")
     sleep(0.1)
 
-    # Generate positive images file (contains all of the positive images used)
-    if DEBUG:
-        print("[*] Generating positive images information file...")
-    os.chdir(GEN_FOLDER)
-    os.system(CREATE_POS_FILE_EX)
-    os.chdir("../")
-    if DEBUG:
-        print("[*] Completed positive images information generation")
-    sleep(0.1)
-
     # Creating samples for the positive images
-    if DEBUG:
-        print("[*] Creating samples...")
-    made_samples = False
-    for file_name in os.listdir(POSITIVES_FOLDER):
-        if made_samples == False:
-            full_file_name = os.path.join(POSITIVES_FOLDER, file_name)
+    counter = 1
+    for file_name in os.listdir(GEN_NORMALIZED_POSITIVES_PATH):
+        full_file_name = os.path.join(GEN_NORMALIZED_POSITIVES_PATH, file_name)
 
-            if (os.path.isfile(full_file_name)):
-                if ".jpg" in full_file_name:
-                    create_samples = CREATE_SAMPLES_COMMAND_EX.replace("POS_IMG", full_file_name)
-                    process = subprocess.Popen(create_samples.split(" "), stdout=sys.stdout)
-                    process.wait()
+        if os.path.isfile(full_file_name):
+            if ".jpg" in full_file_name:
+                if DEBUG:
+                    print("[*] Creating samples...")
+                subprocess.Popen(["mkdir", (GEN_SAMPLES_PATH + str(counter))]).wait()
+                create_samples = CREATE_SAMPLES_COMMAND_EX.replace("POS_IMG", full_file_name).replace("NUM_IMG", str(NUM_NEGATIVES)).replace("SAMPLES_PATH", (GEN_SAMPLES_PATH + str(counter))).replace("INFO_LOC", os.path.join((GEN_SAMPLES_PATH + str(counter)), INFO_FILE))
+                process = subprocess.Popen(create_samples.split(" "), stdout=sys.stdout)
+                process.wait()
+                if DEBUG:
+                    print("[*] Finished creating samples")
 
-                    made_samples = True
-        else:
-            break
-    if DEBUG:
-        print("[*] Finished creating samples")
-    sleep(0.1)
+                # Creating vector file
+                if DEBUG:
+                    print("[*] Creating vector file...")
+                create_vec_file = CREATE_VEC_COMMAND_EX.replace("NUM_IMG", str(NUM_NEGATIVES)).replace("VEC_FILE", (GEN_VEC_FILE[:-4] + str(counter) + GEN_VEC_FILE[-4:])).replace("INFO_LOC", os.path.join((GEN_SAMPLES_PATH + str(counter)), INFO_FILE))
+                os.system(create_vec_file)
+                if DEBUG:
+                    print("[*] Finished writing vector file")
 
-    # Creating vector file
-    if DEBUG:
-        print("[*] Creating vector file...")
-    create_vec_file = CREATE_VEC_COMMAND_EX
-    os.system(create_vec_file)
-    if DEBUG:
-        print("[*] Finished writing vector file")
-    sleep(0.1)
+                sleep(0.1)
 
     sys.exit(0)
+
     # Training cascade
     if DEBUG:
         print("[*] Training the cascade...")

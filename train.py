@@ -135,6 +135,8 @@ if __name__ == '__main__':
                 if DEBUG:
                     print("[*] Finished writing vector file")
 
+                counter += 1
+
                 sleep(0.1)
 
     sys.exit(0)

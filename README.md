@@ -13,6 +13,7 @@ First, insert negative images into the *negatives* directory. Then, insert all p
 At the moment, there are a number of requirements that must be met to use the system:
 
 1. Python 3.x (I've tested Python 3.5.x and verified it works)
+2. Python 2.7.x (the script which merges the vector files requires Python 2.7.x)
 2. OpenCV 3.1.x
 3. Linux/Mac OSX
 

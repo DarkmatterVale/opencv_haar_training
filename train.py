@@ -31,6 +31,8 @@ POS_FILE = "positives.txt"
 INFO_FILE = "info.lst"
 VEC_FILE = "positives.vec"
 
+MERGE_VEC_SCRIPT_PATH = "./utils/mergevec.py"
+
 GEN_NORMALIZED_NEGATIVES_FOLDER = "normalized_neg"
 GEN_NORMALIZED_POSITIVES_FOLDER = "normalized_pos"
 
@@ -47,6 +49,7 @@ CREATE_NEG_FILE_EX = 'find ' + GEN_NORMALIZED_NEGATIVES_FOLDER + ' -iname "*.jpg
 CREATE_POS_FILE_EX = 'find ' + GEN_NORMALIZED_POSITIVES_FOLDER + ' -iname "*.jpg" > POS_FILE'
 CREATE_VEC_COMMAND_EX = "opencv_createsamples -info INFO_LOC -num NUM_IMG -w " + WIDTH + " -h " + HEIGHT + " -vec VEC_FILE"
 TRAIN_CASCADE_COMMAND = "opencv_traincascade -data ../" + DATA_FOLDER + " -vec " + VEC_FILE + " -bg " + NEG_FILE + " -numPos 1800 -numNeg 900 -numStages 1 -w " + WIDTH + " -h " + HEIGHT
+MERGE_VECTORS_COMMAND_EX = "python " + MERGE_VEC_SCRIPT_PATH + " -v INPUT_FILES -o OUTPUT_FILE"
 
 if __name__ == '__main__':
     # Ensuring the previous build has been removed
@@ -140,7 +143,14 @@ if __name__ == '__main__':
 
                 sleep(0.1)
 
-    sys.exit(0)
+    # Merging vector files into one
+    if DEBUG:
+        print("[*] Compiling vector files into one single file...")
+    merge_command = MERGE_VECTORS_COMMAND_EX.replace("INPUT_FILES", GEN_VEC_PATH).replace("OUTPUT_FILE", os.path.join(GEN_FOLDER, VEC_FILE))
+    os.system(merge_command)
+    if DEBUG:
+        print("[*] Finished compiling vector files into a single file")
+    sleep(0.1)
 
     # Training cascade
     if DEBUG:

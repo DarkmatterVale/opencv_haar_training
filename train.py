@@ -13,11 +13,19 @@ WIDTH = str(30)
 HEIGHT = str(30)
 DEFAULT_NEG = 900
 DEFAULT_POS = 1800
+DEFAULT_STAGES = 5
+USE_USER_IMG_NUM = False
 
 if getOption("width") != None:
     WIDTH = getOption("width")
 if getOption("height") != None:
     HEIGHT = getOption("height")
+if getOption("num_stages") != None:
+    DEFAULT_STAGES = getOption("num_stages")
+if getOption("images") != None:
+    USE_USER_IMG_NUM = True
+    DEFAULT_POS = int(getOption("images"))
+    DEFAULT_NEG = DEFAULT_POS / 2
 
 GEN_FOLDER = "generated"
 NEGATIVES_FOLDER = "negatives/"
@@ -48,7 +56,7 @@ CREATE_SAMPLES_COMMAND_EX = "opencv_createsamples -img POS_IMG -bg " + GEN_NEG_F
 CREATE_NEG_FILE_EX = 'find ' + GEN_NORMALIZED_NEGATIVES_FOLDER + ' -iname "*.jpg" > ' + NEG_FILE
 CREATE_POS_FILE_EX = 'find ' + GEN_NORMALIZED_POSITIVES_FOLDER + ' -iname "*.jpg" > POS_FILE'
 CREATE_VEC_COMMAND_EX = "opencv_createsamples -info INFO_LOC -num NUM_IMG -w " + WIDTH + " -h " + HEIGHT + " -vec VEC_FILE"
-TRAIN_CASCADE_COMMAND = "opencv_traincascade -data ../" + DATA_FOLDER + " -vec " + VEC_FILE + " -bg " + NEG_FILE + " -numPos 1800 -numNeg 900 -numStages 1 -w " + WIDTH + " -h " + HEIGHT
+TRAIN_CASCADE_COMMAND = "opencv_traincascade -data ../" + DATA_FOLDER + " -vec " + VEC_FILE + " -bg " + NEG_FILE + " -numPos POS_IMGS -numNeg NEG_IMGS -numStages " + DEFAULT_STAGES + " -w " + WIDTH + " -h " + HEIGHT
 MERGE_VECTORS_COMMAND_EX = "python " + MERGE_VEC_SCRIPT_PATH + " -v INPUT_FILES -o OUTPUT_FILE"
 
 if __name__ == '__main__':
@@ -114,6 +122,11 @@ if __name__ == '__main__':
         print("[*] Completed positive image copying")
     sleep(0.1)
 
+    # Setting the number of images the train_cascade command should use
+    if USE_USER_IMG_NUM == False:
+        DEFAULT_NEG = int(((NUM_POSITIVES * NUM_NEGATIVES) / 2) * 0.85)
+        DEFAULT_POS = int((NUM_POSITIVES * NUM_NEGATIVES) * 0.85)
+
     # Creating samples for the positive images
     counter = 1
     for file_name in os.listdir(GEN_NORMALIZED_POSITIVES_PATH):
@@ -156,7 +169,7 @@ if __name__ == '__main__':
     if DEBUG:
         print("[*] Training the cascade...")
     os.chdir(GEN_FOLDER)
-    process = subprocess.Popen(TRAIN_CASCADE_COMMAND, shell=True)
+    process = subprocess.Popen(TRAIN_CASCADE_COMMAND.replace("POS_IMGS", str(DEFAULT_POS)).replace("NEG_IMGS", str(DEFAULT_NEG)), shell=True)
     process.wait()
     os.chdir("../")
     if DEBUG:

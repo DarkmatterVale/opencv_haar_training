@@ -11,8 +11,8 @@ parseOptions()
 DEBUG = getOption("debug")
 WIDTH = str(30)
 HEIGHT = str(30)
-DEFAULT_NEG = 900
-DEFAULT_POS = 1800
+DEFAULT_NEG = 1000
+DEFAULT_POS = 500
 DEFAULT_STAGES = str(5)
 USE_USER_IMG_NUM = False
 
@@ -25,7 +25,7 @@ if getOption("num_stages") != None:
 if getOption("images") != None:
     USE_USER_IMG_NUM = True
     DEFAULT_POS = int(getOption("images"))
-    DEFAULT_NEG = DEFAULT_POS / 2
+    DEFAULT_NEG = DEFAULT_POS * 2
 
 GEN_FOLDER = "generated"
 NEGATIVES_FOLDER = "negatives/"
@@ -56,7 +56,7 @@ CREATE_SAMPLES_COMMAND_EX = "opencv_createsamples -img POS_IMG -bg " + GEN_NEG_F
 CREATE_NEG_FILE_EX = 'find ' + GEN_NORMALIZED_NEGATIVES_FOLDER + ' -iname "*.jpg" > ' + NEG_FILE
 CREATE_POS_FILE_EX = 'find ' + GEN_NORMALIZED_POSITIVES_FOLDER + ' -iname "*.jpg" > POS_FILE'
 CREATE_VEC_COMMAND_EX = "opencv_createsamples -info INFO_LOC -num NUM_IMG -w " + WIDTH + " -h " + HEIGHT + " -vec VEC_FILE"
-TRAIN_CASCADE_COMMAND = "opencv_traincascade -data ../" + DATA_FOLDER + " -vec " + VEC_FILE + " -bg " + NEG_FILE + " -numPos POS_IMGS -numNeg NEG_IMGS -numStages " + DEFAULT_STAGES + " -w " + WIDTH + " -h " + HEIGHT
+TRAIN_CASCADE_COMMAND = "opencv_traincascade -data ../" + DATA_FOLDER + " -vec " + VEC_FILE + " -bg " + NEG_FILE + " -numPos POS_IMGS -numNeg NEG_IMGS -numStages " + DEFAULT_STAGES + " -w " + WIDTH + " -h " + HEIGHT + " -featureType HAAR -precalcValBufSize 2048 -precalcIdxBufSize 2048"
 MERGE_VECTORS_COMMAND_EX = "python " + MERGE_VEC_SCRIPT_PATH + " -v INPUT_FILES -o OUTPUT_FILE"
 
 if __name__ == '__main__':
@@ -124,8 +124,8 @@ if __name__ == '__main__':
 
     # Setting the number of images the train_cascade command should use
     if USE_USER_IMG_NUM == False:
-        DEFAULT_NEG = int(((NUM_POSITIVES * NUM_NEGATIVES) / 2) * 0.85)
-        DEFAULT_POS = int((NUM_POSITIVES * NUM_NEGATIVES) * 0.85)
+        DEFAULT_NEG = int(NUM_NEGATIVES * 0.9)
+        DEFAULT_POS = DEFAULT_NEG / 2
 
     # Creating samples for the positive images
     counter = 1
@@ -137,7 +137,7 @@ if __name__ == '__main__':
                 if DEBUG:
                     print("[*] Creating samples...")
                 subprocess.Popen(["mkdir", (GEN_SAMPLES_PATH + str(counter))]).wait()
-                create_samples = CREATE_SAMPLES_COMMAND_EX.replace("POS_IMG", full_file_name).replace("NUM_IMG", str(NUM_NEGATIVES)).replace("SAMPLES_PATH", (GEN_SAMPLES_PATH + str(counter))).replace("INFO_LOC", os.path.join((GEN_SAMPLES_PATH + str(counter)), INFO_FILE))
+                create_samples = CREATE_SAMPLES_COMMAND_EX.replace("POS_IMG", full_file_name).replace("NUM_IMG", str(DEFAULT_POS / 10)).replace("SAMPLES_PATH", (GEN_SAMPLES_PATH + str(counter))).replace("INFO_LOC", os.path.join((GEN_SAMPLES_PATH + str(counter)), INFO_FILE))
                 process = subprocess.Popen(create_samples.split(" "), stdout=sys.stdout)
                 process.wait()
                 if DEBUG:
@@ -147,13 +147,12 @@ if __name__ == '__main__':
                 if DEBUG:
                     print("[*] Creating vector file...")
                 GEN_VEC_FILE = os.path.join(GEN_VEC_PATH, VEC_FILE)
-                create_vec_file = CREATE_VEC_COMMAND_EX.replace("NUM_IMG", str(NUM_NEGATIVES)).replace("VEC_FILE", (GEN_VEC_FILE[:-4] + str(counter) + GEN_VEC_FILE[-4:])).replace("INFO_LOC", os.path.join((GEN_SAMPLES_PATH + str(counter)), INFO_FILE))
+                create_vec_file = CREATE_VEC_COMMAND_EX.replace("NUM_IMG", str(DEFAULT_POS / 10)).replace("VEC_FILE", (GEN_VEC_FILE[:-4] + str(counter) + GEN_VEC_FILE[-4:])).replace("INFO_LOC", os.path.join((GEN_SAMPLES_PATH + str(counter)), INFO_FILE))
                 os.system(create_vec_file)
                 if DEBUG:
                     print("[*] Finished writing vector file")
 
                 counter += 1
-
                 sleep(0.1)
 
     # Merging vector files into one
